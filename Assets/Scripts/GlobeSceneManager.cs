@@ -3,11 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
 
+[RequireComponent(typeof(WebAudioManager))]
 public class GlobeSceneManager : MonoBehaviour
 {
     public float FaceAwayTolerance;
 
     public AudioMixer Mixer;
+#if UNITY_WEBGL
+    private WebAudioManager WebAudioManager;
+#endif
     public float CutoffMax = 2f;
     public float CutoffMin = 0.4f;
     public float NormalCutoff = 5000f;
@@ -21,11 +25,24 @@ public class GlobeSceneManager : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        sceneParent = transform.FindChild("Scene");
+        sceneParent = transform.FindChild("Scenes");
+
+#if UNITY_WEBGL
+        // setup web audio manager
+        WebAudioManager = GetComponent<WebAudioManager>();
+#endif
 
         activeScene = getActiveScene();
         if (!activeScene)
             setRandomActiveScene();
+#if UNITY_WEBGL
+        else
+        {
+            WebAudioManager.SetScene(activeScene);
+        }
+#endif 
+
+
     }
 
     // Update is called once per frame
@@ -55,8 +72,13 @@ public class GlobeSceneManager : MonoBehaviour
 
     private void updateAudio(float dMag)
     {
+#if UNITY_WEBGL
+        float vol = Mathf.Lerp(WebAudioManager.MasterVolumeMin, WebAudioManager.MasterVolumeMax, (dMag - CutoffMin) / (CutoffMax - CutoffMin));
+        WebAudioManager.SetMasterVolume(vol);
+#else
         float cutoff = Mathf.Lerp(FaceAwayCutoff, NormalCutoff, (dMag - CutoffMin) / (CutoffMax - CutoffMin));
         Mixer.SetFloat("Scene_Lowpass", cutoff);
+#endif
     }
 
     /// <summary>
@@ -109,5 +131,9 @@ public class GlobeSceneManager : MonoBehaviour
         nextScene.gameObject.SetActive(true);
 
         activeScene = nextScene;
+
+#if UNITY_WEBGL
+        WebAudioManager.SetScene(activeScene);
+#endif
     }
 }
