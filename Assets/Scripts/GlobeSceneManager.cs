@@ -1,10 +1,17 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Audio;
 
 public class GlobeSceneManager : MonoBehaviour
 {
-    public float faceAwayTolerance;
+    public float FaceAwayTolerance;
+
+    public AudioMixer Mixer;
+    public float CutoffMax = 2f;
+    public float CutoffMin = 0.4f;
+    public float NormalCutoff = 5000f;
+    public float FaceAwayCutoff = 180f;
 
     private Transform sceneParent;
     private bool sceneChanged;
@@ -32,14 +39,24 @@ public class GlobeSceneManager : MonoBehaviour
         float dMagnitude = Vector3.Magnitude(delta);
 
         // change scene if magnitude is <= tolerance
-        if (!sceneChanged && dMagnitude <= faceAwayTolerance)
+        if (!sceneChanged && dMagnitude <= FaceAwayTolerance)
         {
             // change scene
+            Debug.Log("Change scene!");
             setRandomActiveScene();
             sceneChanged = true;
         }
-        else if (sceneChanged && dMagnitude > faceAwayTolerance) // reset flag if no longer facing away from camera
+        else if (sceneChanged && dMagnitude > FaceAwayTolerance) // reset flag if no longer facing away from camera
             sceneChanged = false;
+
+        // update audio
+        updateAudio(dMagnitude);
+    }
+
+    private void updateAudio(float dMag)
+    {
+        float cutoff = Mathf.Lerp(FaceAwayCutoff, NormalCutoff, (dMag - CutoffMin) / (CutoffMax - CutoffMin));
+        Mixer.SetFloat("Scene_Lowpass", cutoff);
     }
 
     /// <summary>
