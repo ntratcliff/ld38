@@ -10,6 +10,10 @@ public class WebAudioManager : MonoBehaviour
     public float MusicVolume = 0.8f;
     public float AmbientVolume = 1f;
 
+    public float FadeInTime = 0.2f;
+    private float elapsedFadeTime;
+    private float fadeVolume;
+
     public AudioSource MusicSource;
     public AudioSource AmbientSource;
 
@@ -19,6 +23,8 @@ public class WebAudioManager : MonoBehaviour
     {
         MasterVolume = volume;
 
+        updateFade();
+
         if (MusicSource)
             updateSource(MusicSource, initMusicVol, MusicVolume);
 
@@ -26,10 +32,20 @@ public class WebAudioManager : MonoBehaviour
             updateSource(AmbientSource, initAmbientVol, AmbientVolume);
     }
 
+    private void updateFade()
+    {
+        if (elapsedFadeTime > FadeInTime)
+            return;
+
+        fadeVolume = Mathf.Lerp(0f, 1f, elapsedFadeTime / FadeInTime);
+
+        elapsedFadeTime += Time.deltaTime;
+    }
+
     private void updateSource(AudioSource source, float initVol, float volume)
     {
         // set source volume relative to master and volume float
-        source.volume = initVol * volume * MasterVolume;
+        source.volume = initVol * volume * fadeVolume * MasterVolume;
     }
 
     public void SetScene(Transform scene)
@@ -70,5 +86,8 @@ public class WebAudioManager : MonoBehaviour
             // get initial volume
             initAmbientVol = AmbientSource.volume;
         }
+
+        // start fade
+        elapsedFadeTime = 0f;
     }
 }
