@@ -12,7 +12,7 @@ public class ScrollZoom : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        targetDist = -Camera.main.transform.position.z;
+        targetDist = -Camera.main.transform.localPosition.z;
     }
 
     // Update is called once per frame
@@ -22,8 +22,8 @@ public class ScrollZoom : MonoBehaviour
         targetDist = Mathf.Clamp(targetDist + -Input.GetAxis("Zoom") * Speed, MinDist, MaxDist);
 
         // set camera distance
-        Vector3 camPos = Camera.main.transform.position;
+        Vector3 camPos = Camera.main.transform.localPosition;
         camPos.z = Mathf.Lerp(camPos.z, -targetDist, Time.deltaTime * LerpSpeed);
-        Camera.main.transform.position = camPos;
+        Camera.main.transform.localPosition = camPos;
     }
 }
